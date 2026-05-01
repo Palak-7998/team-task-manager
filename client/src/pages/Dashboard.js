@@ -4,10 +4,7 @@ import axios from 'axios';
 function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
-  
-  // Get the role and make it lowercase so "Admin" matches "admin"
-  const rawRole = localStorage.getItem('role') || 'member';
-  const role = rawRole.toLowerCase(); 
+  const role = (localStorage.getItem('role') || 'member').toLowerCase(); 
 
   const API_BASE_URL = 'https://team-task-manager-ftsw.onrender.com/api/tasks';
 
@@ -34,9 +31,18 @@ function Dashboard() {
     }
   };
 
+  // --- NEW: DELETE FUNCTION ---
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/${id}`);
+      getTasks(); // Refresh the list after deleting
+    } catch (err) {
+      console.error("Delete error", err);
+    }
+  };
+
   return (
-    <div style={{ padding: '40px', fontFamily: 'Arial', textAlign: 'center' }}>
-      {/* Now "Admin" will correctly trigger the Admin Control Panel */}
+    <div style={{ padding: '40px', textAlign: 'center' }}>
       <h1>{role === 'admin' ? 'Admin Control Panel' : 'User Task Dashboard'}</h1>
       
       <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '10px', width: '200px', margin: '0 auto 30px' }}>
@@ -45,22 +51,22 @@ function Dashboard() {
       </div>
 
       <form onSubmit={handleAddTask}>
-        <input 
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)} 
-          placeholder="Enter new task..." 
-          style={{ padding: '10px', width: '300px' }}
-        />
-        <button type="submit" style={{ padding: '10px 20px', marginLeft: '10px', background: 'green', color: 'white', border: 'none', cursor: 'pointer' }}>
-          Add Task
-        </button>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter task..." style={{ padding: '10px' }} />
+        <button type="submit" style={{ padding: '10px', marginLeft: '10px', background: 'green', color: 'white' }}>Add Task</button>
       </form>
 
       <ul style={{ listStyle: 'none', padding: '20px' }}>
-        {tasks.map((task, index) => (
-          <li key={index} style={{ background: '#f4f4f4', margin: '10px auto', padding: '10px', width: '400px', borderRadius: '5px', display: 'flex', justifyContent: 'space-between' }}>
+        {tasks.map((task) => (
+          <li key={task._id} style={{ background: '#f4f4f4', margin: '10px auto', padding: '10px', width: '400px', borderRadius: '5px', display: 'flex', justifyContent: 'space-between' }}>
             <span>{task.title}</span>
-            {role === 'admin' && <span style={{color: 'red', fontWeight: 'bold'}}> [Delete]</span>}
+            {role === 'admin' && (
+              <button 
+                onClick={() => deleteTask(task._id)} 
+                style={{color: 'red', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}
+              >
+                [Delete]
+              </button>
+            )}
           </li>
         ))}
       </ul>
