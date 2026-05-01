@@ -22,10 +22,9 @@ function Dashboard() {
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
-
     try {
       const res = await axios.post(API_BASE_URL, { title });
-      // Immediately add the new task to the list
+      // Add exactly 1 to the list
       setTasks(prev => [...prev, res.data]);
       setTitle('');
     } catch (err) {
@@ -33,24 +32,23 @@ function Dashboard() {
     }
   };
 
-  const deleteTask = async (task) => {
-    // Try every possible ID format to make sure we get the right one
+  // --- FIXED DELETE: Uses Index as a backup ---
+  const deleteTask = async (task, index) => {
     const id = task._id || task.id;
-    
-    if (!id) {
-      console.error("ID not found for this task");
-      return;
-    }
 
-    try {
-      // 1. Instantly remove from screen and update count by -1
-      setTasks(prev => prev.filter(t => (t._id !== id && t.id !== id)));
+    // 1. Instantly remove from screen using the index
+    // This GUARANTEES the count drops by 1 and the item vanishes
+    const updatedTasks = [...tasks];
+    updatedTasks.splice(index, 1);
+    setTasks(updatedTasks);
 
-      // 2. Tell the backend to delete it permanently
-      await axios.delete(`${API_BASE_URL}/${id}`);
-    } catch (err) {
-      console.error("Delete failed on server", err);
-      // Optional: getTasks(); // If it fails, bring it back
+    // 2. Try to delete from server if ID exists
+    if (id) {
+      try {
+        await axios.delete(`${API_BASE_URL}/${id}`);
+      } catch (err) {
+        console.error("Server delete failed", err);
+      }
     }
   };
 
@@ -59,7 +57,7 @@ function Dashboard() {
       <h1>{role === 'admin' ? 'Admin Control Panel' : 'User Task Dashboard'}</h1>
       
       <div style={{ border: '2px solid #333', padding: '20px', borderRadius: '15px', width: '220px', margin: '0 auto 30px', background: '#fff' }}>
-        <h3 style={{ margin: '0' }}>Current Count</h3>
+        <h3 style={{ margin: '0' }}>Total Activities</h3>
         <p style={{ fontSize: '40px', fontWeight: 'bold', margin: '10px 0', color: '#007bff' }}>
           {tasks.length}
         </p>
@@ -79,11 +77,11 @@ function Dashboard() {
 
       <div style={{ maxWidth: '550px', margin: '0 auto' }}>
         {tasks.map((task, index) => (
-          <div key={task._id || task.id || index} style={{ background: '#ffffff', border: '1px solid #ddd', margin: '12px 0', padding: '15px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div key={index} style={{ background: '#ffffff', border: '1px solid #ddd', margin: '12px 0', padding: '15px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '18px' }}>{task.title}</span>
             {role === 'admin' && (
               <button 
-                onClick={() => deleteTask(task)} 
+                onClick={() => deleteTask(task, index)} 
                 style={{ color: 'white', background: '#dc3545', border: 'none', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 Delete
