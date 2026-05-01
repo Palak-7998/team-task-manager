@@ -5,11 +5,13 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
   
-  // 1. Get role and fix capitalization
-  const role = (localStorage.getItem('role') || 'member').toLowerCase(); 
+  // Get role and handle capitalization (Admin vs admin)
+  const rawRole = localStorage.getItem('role') || 'member';
+  const role = rawRole.toLowerCase(); 
 
   const API_BASE_URL = 'https://team-task-manager-ftsw.onrender.com/api/tasks';
 
+  // 1. Fetch tasks from backend
   const getTasks = async () => {
     try {
       const res = await axios.get(API_BASE_URL);
@@ -19,38 +21,40 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => { getTasks(); }, []);
+  useEffect(() => { 
+    getTasks(); 
+  }, []);
 
+  // 2. Add task function
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!title) return;
     try {
-      await axios.post(API_BASE_URL, { title });
+      const res = await axios.post(API_BASE_URL, { title });
+      // Clear input and refresh list
       setTitle('');
-      getTasks(); // Refresh list from server
+      getTasks();
     } catch (err) {
       console.error("Add error", err);
     }
   };
 
-  // 2. The Permanent Delete Function
-  const deleteTask = async (task) => {
-    // Check for every possible ID format MongoDB uses
-    const id = task._id || task.id || (task.data && task.data._id);
-    
-    if (!id) {
-      console.error("No ID found for task:", task);
-      return;
-    }
+  // 3. COMPLETE DELETE FUNCTION
+  const deleteTask = async (taskId) => {
+    if (!taskId) return;
+
+    // OPTIMISTIC UPDATE: Remove from UI immediately so the user sees it vanish
+    const updatedTasks = tasks.filter(task => (task._id !== taskId && task.id !== taskId));
+    setTasks(updatedTasks);
 
     try {
-      // This sends the request to: https://.../api/tasks/YOUR_ID
-      await axios.delete(`${API_BASE_URL}/${id}`);
-      
-      // Update the UI immediately so the user sees it vanish
-      setTasks(prevTasks => prevTasks.filter(t => (t._id !== id && t.id !== id)));
+      // Tell backend to delete
+      await axios.delete(`${API_BASE_URL}/${taskId}`);
+      console.log("Deleted successfully from server");
     } catch (err) {
-      console.error("Delete failed on server", err);
+      console.error("Server delete failed, but task removed from UI for now", err);
+      // Optional: Refresh from server if you want to show it failed
+      // getTasks(); 
     }
   };
 
@@ -58,38 +62,38 @@ function Dashboard() {
     <div style={{ padding: '40px', fontFamily: 'Arial', textAlign: 'center' }}>
       <h1>{role === 'admin' ? 'Admin Control Panel' : 'User Task Dashboard'}</h1>
       
-      <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '10px', width: '200px', margin: '0 auto 30px' }}>
+      <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '10px', width: '200px', margin: '0 auto 30px', background: '#fff' }}>
         <h3>Total Tasks</h3>
-        <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{tasks.length}</p>
+        <p style={{ fontSize: '32px', fontWeight: 'bold', margin: '10px 0' }}>{tasks.length}</p>
       </div>
 
-      <form onSubmit={handleAddTask} style={{ marginBottom: '20px' }}>
+      <form onSubmit={handleAddTask} style={{ marginBottom: '30px' }}>
         <input 
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
-          placeholder="New task..." 
-          style={{ padding: '10px', width: '250px' }}
+          placeholder="What needs to be done?" 
+          style={{ padding: '12px', width: '300px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
-        <button type="submit" style={{ padding: '10px 20px', marginLeft: '10px', background: 'green', color: 'white', border: 'none', cursor: 'pointer' }}>
+        <button type="submit" style={{ padding: '12px 25px', marginLeft: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
           Add Task
         </button>
       </form>
 
-      <ul style={{ listStyle: 'none', padding: '0' }}>
-        {tasks.map((task, index) => (
-          <li key={task._id || index} style={{ background: '#f9f9f9', border: '1px solid #ddd', margin: '10px auto', padding: '15px', width: '450px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{task.title}</span>
+      <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+        {tasks.map((task) => (
+          <div key={task._id || task.id} style={{ background: '#f8f9fa', border: '1px solid #e9ecef', margin: '10px 0', padding: '15px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '18px' }}>{task.title}</span>
             {role === 'admin' && (
               <button 
-                onClick={() => deleteTask(task)} 
-                style={{color: 'white', background: '#d9534f', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer'}}
+                onClick={() => deleteTask(task._id || task.id)} 
+                style={{ color: 'white', background: '#dc3545', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 Delete
               </button>
             )}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
