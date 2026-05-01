@@ -11,12 +11,15 @@ function Login() {
     e.preventDefault();
     try {
       const res = await axios.post('https://team-task-manager-ftsw.onrender.com/api/auth/login', { email, password });
+      
+      // 1. Save the token
       localStorage.setItem('token', res.data.token);
+      
+      // 2. THIS IS THE MISSING PART: Save the role!
+      localStorage.setItem('role', res.data.user.role); 
+      
       alert("Login Successful!");
       navigate('/dashboard');
-    } catch (err) {
-      console.error(err);
-      alert("Invalid Credentials! Please register a NEW email first.");
     }
   };
 
