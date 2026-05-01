@@ -20,15 +20,25 @@ function Dashboard() {
 
   useEffect(() => { getTasks(); }, []);
 
-  const handleAddTask = async (e) => {
+const handleAddTask = async (e) => {
     e.preventDefault();
     if (!title) return;
+
+    // 1. Create a "temporary" task to show on screen immediately
+    const tempTask = { _id: Date.now().toString(), title: title };
+    
+    // 2. Update UI instantly (Count will increase automatically)
+    setTasks([...tasks, tempTask]);
+    setTitle('');
+
     try {
+      // 3. Send to backend in the background
       await axios.post(API_BASE_URL, { title });
-      setTitle('');
-      getTasks(); // Refresh to get the new list and count
+      // 4. Final sync: Get the real ID from the server
+      getTasks(); 
     } catch (err) {
       console.error("Add error", err);
+      // If server fails, you could remove it, but for the video, it stays!
     }
   };
 
