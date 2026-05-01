@@ -11,7 +11,7 @@ function Login() {
     e.preventDefault();
     try {
       // Direct call to Port 5000
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      await axios.post('https://team-task-manager-ftsw.onrender.com/api/auth/login', { email, password });
       
       if (res.status === 200) {
         alert("Login Successful!");
