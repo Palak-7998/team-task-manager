@@ -5,9 +5,9 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
   
-  // Force a refresh from localStorage
-  const role = localStorage.getItem('role');
-  console.log("Current User Role is:", role); // This helps us debug!
+  // Get the role and make it lowercase so "Admin" matches "admin"
+  const rawRole = localStorage.getItem('role') || 'member';
+  const role = rawRole.toLowerCase(); 
 
   const API_BASE_URL = 'https://team-task-manager-ftsw.onrender.com/api/tasks';
 
@@ -20,9 +20,7 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => { 
-    getTasks(); 
-  }, []);
+  useEffect(() => { getTasks(); }, []);
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -38,7 +36,7 @@ function Dashboard() {
 
   return (
     <div style={{ padding: '40px', fontFamily: 'Arial', textAlign: 'center' }}>
-      {/* If role is exactly 'admin', show Admin title. Otherwise, show User title */}
+      {/* Now "Admin" will correctly trigger the Admin Control Panel */}
       <h1>{role === 'admin' ? 'Admin Control Panel' : 'User Task Dashboard'}</h1>
       
       <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '10px', width: '200px', margin: '0 auto 30px' }}>
@@ -62,7 +60,7 @@ function Dashboard() {
         {tasks.map((task, index) => (
           <li key={index} style={{ background: '#f4f4f4', margin: '10px auto', padding: '10px', width: '400px', borderRadius: '5px', display: 'flex', justifyContent: 'space-between' }}>
             <span>{task.title}</span>
-            {role === 'admin' && <span style={{color: 'red', fontWeight: 'bold'}}> [Admin Delete]</span>}
+            {role === 'admin' && <span style={{color: 'red', fontWeight: 'bold'}}> [Delete]</span>}
           </li>
         ))}
       </ul>
