@@ -11,7 +11,7 @@ function Register() {
     e.preventDefault();
     try {
       // We use the FULL address here so it cannot fail
-      await axios.post('http://localhost:5000/api/auth/register', { name, email, password, role });
+      await axios.post('https://team-task-manager-ftsw.onrender.com/api/auth/register', { name, email, password, role });
       alert("Registration Successful!");
     } catch (err) {
       alert("Failed! Make sure the black terminal says DATABASE CONNECTED");
