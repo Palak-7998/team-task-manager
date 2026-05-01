@@ -5,9 +5,8 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
   
-  // 1. Get role and normalize to lowercase
+  // Role normalization (handles Admin vs admin)
   const role = (localStorage.getItem('role') || 'member').toLowerCase(); 
-
   const API_BASE_URL = 'https://team-task-manager-ftsw.onrender.com/api/tasks';
 
   const getTasks = async () => {
@@ -19,9 +18,7 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => { 
-    getTasks(); 
-  }, []);
+  useEffect(() => { getTasks(); }, []);
 
   const handleAddTask = async (e) => {
     e.preventDefault();
@@ -29,28 +26,25 @@ function Dashboard() {
     try {
       await axios.post(API_BASE_URL, { title });
       setTitle('');
-      getTasks(); // Refresh count and list from server
+      getTasks(); // Refresh to get the new list and count
     } catch (err) {
       console.error("Add error", err);
     }
   };
 
-  // 2. THE UPDATED DELETE FUNCTION
+  // --- THE INSTANT DELETE & COUNT UPDATE FUNCTION ---
   const deleteTask = async (taskId) => {
     if (!taskId) return;
 
-    // STEP A: Update the UI immediately (Optimistic Update)
-    // This removes the task and lowers the count instantly on screen
-    const remainingTasks = tasks.filter(task => (task._id !== taskId && task.id !== taskId));
-    setTasks(remainingTasks);
+    // 1. UPDATE UI INSTANTLY (Decreases count and removes from screen)
+    const updatedTasks = tasks.filter(task => (task._id !== taskId && task.id !== taskId));
+    setTasks(updatedTasks);
 
+    // 2. TELL BACKEND TO DELETE
     try {
-      // STEP B: Send the actual delete request to the backend
       await axios.delete(`${API_BASE_URL}/${taskId}`);
-      console.log("Deleted from server successfully");
     } catch (err) {
-      console.error("Server delete failed, but UI is updated for this session", err);
-      // Optional: if it fails, you could call getTasks() to bring it back
+      console.error("Delete failed on server, but UI is updated", err);
     }
   };
 
@@ -58,36 +52,34 @@ function Dashboard() {
     <div style={{ padding: '40px', fontFamily: 'Arial', textAlign: 'center' }}>
       <h1>{role === 'admin' ? 'Admin Control Panel' : 'User Task Dashboard'}</h1>
       
-      {/* 3. The Count Box (Updates automatically because tasks.length changes) */}
-      <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '10px', width: '200px', margin: '0 auto 30px', backgroundColor: '#fff' }}>
-        <h3>Total Tasks</h3>
-        <p style={{ fontSize: '32px', fontWeight: 'bold', margin: '0', color: '#333' }}>
+      {/* Visual Count Box */}
+      <div style={{ border: '2px solid #333', padding: '20px', borderRadius: '15px', width: '220px', margin: '0 auto 30px', background: '#fff', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
+        <h3 style={{ margin: '0' }}>Current Count</h3>
+        <p style={{ fontSize: '40px', fontWeight: 'bold', margin: '10px 0', color: '#007bff' }}>
           {tasks.length}
         </p>
       </div>
 
-      <form onSubmit={handleAddTask} style={{ marginBottom: '30px' }}>
+      <form onSubmit={handleAddTask} style={{ marginBottom: '40px' }}>
         <input 
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
-          placeholder="New activity..." 
-          style={{ padding: '12px', width: '300px', borderRadius: '5px', border: '1px solid #ddd' }}
+          placeholder="Type new activity..." 
+          style={{ padding: '12px', width: '300px', borderRadius: '5px', border: '1px solid #ccc' }}
         />
-        <button type="submit" style={{ padding: '12px 20px', marginLeft: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Add Task
+        <button type="submit" style={{ padding: '12px 25px', marginLeft: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+          Add Activity
         </button>
       </form>
 
-      <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '550px', margin: '0 auto' }}>
         {tasks.map((task) => (
-          <div key={task._id || task.id} style={{ background: '#f8f9fa', border: '1px solid #eee', margin: '10px 0', padding: '15px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '18px' }}>{task.title}</span>
-            
-            {/* Show Delete button only for Admin */}
+          <div key={task._id || task.id} style={{ background: '#ffffff', border: '1px solid #ddd', margin: '12px 0', padding: '15px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+            <span style={{ fontSize: '18px', fontWeight: '500' }}>{task.title}</span>
             {role === 'admin' && (
               <button 
                 onClick={() => deleteTask(task._id || task.id)} 
-                style={{ color: 'white', background: '#dc3545', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ color: 'white', background: '#dc3545', border: 'none', padding: '8px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
               >
                 Delete
               </button>
