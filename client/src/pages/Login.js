@@ -7,17 +7,15 @@ function Login() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // Direct call to Port 5000
-      await axios.post('https://team-task-manager-ftsw.onrender.com/api/auth/login', { email, password });
-      
-      if (res.status === 200) {
-        alert("Login Successful!");
-        navigate('/dashboard'); 
-      }
+      const res = await axios.post('https://team-task-manager-ftsw.onrender.com/api/auth/login', { email, password });
+      localStorage.setItem('token', res.data.token);
+      alert("Login Successful!");
+      navigate('/dashboard');
     } catch (err) {
+      console.error(err);
       alert("Invalid Credentials! Please register a NEW email first.");
     }
   };
