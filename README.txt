@@ -1,7 +1,7 @@
 =========================================
 PROJECT: Team Task Manager (MERN Stack)
 STUDENT NAME: Palak Pal
-COLLEGE: [Your College Name]
+COLLEGE: Pranveer Singh Institute of Technology
 GRADUATION: July 2026
 =========================================
 
