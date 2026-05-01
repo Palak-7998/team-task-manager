@@ -8,6 +8,7 @@ function Dashboard() {
   const role = (localStorage.getItem('role') || 'member').toLowerCase(); 
   const API_BASE_URL = 'https://team-task-manager-ftsw.onrender.com/api/tasks';
 
+  // Load initial list only once
   const getTasks = async () => {
     try {
       const res = await axios.get(API_BASE_URL);
@@ -19,33 +20,29 @@ function Dashboard() {
 
   useEffect(() => { getTasks(); }, []);
 
-  // --- CORRECTED ADD FUNCTION: Increases by exactly 1 ---
+  // --- FIXED ADD: Always exactly +1 ---
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (!title) return;
+    if (!title.trim()) return;
 
     try {
-      // 1. Send to backend first
       const res = await axios.post(API_BASE_URL, { title });
-      
-      // 2. Update the list with the NEW task only (Count will go up by 1)
-      setTasks([...tasks, res.data]); 
+      // We only update the state with the single new item from the server
+      setTasks(prevTasks => [...prevTasks, res.data]);
       setTitle('');
     } catch (err) {
       console.error("Add error", err);
     }
   };
 
-  // --- CORRECTED DELETE FUNCTION: Decreases by exactly 1 ---
+  // --- FIXED DELETE: Always exactly -1 ---
   const deleteTask = async (taskId) => {
     if (!taskId) return;
 
     try {
       await axios.delete(`${API_BASE_URL}/${taskId}`);
-      
-      // Update UI by removing only that specific ID
-      const remainingTasks = tasks.filter(t => (t._id !== taskId && t.id !== taskId));
-      setTasks(remainingTasks);
+      // We filter the local state to remove ONLY that one ID
+      setTasks(prevTasks => prevTasks.filter(task => (task._id !== taskId && task.id !== taskId)));
     } catch (err) {
       console.error("Delete failed", err);
     }
@@ -55,6 +52,7 @@ function Dashboard() {
     <div style={{ padding: '40px', fontFamily: 'Arial', textAlign: 'center' }}>
       <h1>{role === 'admin' ? 'Admin Control Panel' : 'User Task Dashboard'}</h1>
       
+      {/* The Count: Directly tied to the length of the tasks array */}
       <div style={{ border: '2px solid #333', padding: '20px', borderRadius: '15px', width: '220px', margin: '0 auto 30px', background: '#fff' }}>
         <h3 style={{ margin: '0' }}>Current Count</h3>
         <p style={{ fontSize: '40px', fontWeight: 'bold', margin: '10px 0', color: '#28a745' }}>
