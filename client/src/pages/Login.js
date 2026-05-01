@@ -6,23 +6,22 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-
-  const handleLogin = async (e) => {
+const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post('https://team-task-manager-ftsw.onrender.com/api/auth/login', { email, password });
       
-      // 1. Save the token
+      // THIS IS THE KEY: We must save both the token AND the role
       localStorage.setItem('token', res.data.token);
-      
-      // 2. THIS IS THE MISSING PART: Save the role!
-      localStorage.setItem('role', res.data.user.role); 
+      localStorage.setItem('role', res.data.user.role); // This line tells the Dashboard who you are!
       
       alert("Login Successful!");
       navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+      alert("Invalid Credentials! Please register a NEW email first.");
     }
   };
-
   return (
     <div style={{ padding: '50px', textAlign: 'center' }}>
       <h1>Login</h1>
