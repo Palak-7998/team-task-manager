@@ -7,10 +7,13 @@ function Login() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-const handleLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      // 1. Make sure "const res =" is here
+      // 2. Make sure the link is exactly this
       const res = await axios.post('https://team-task-manager-ftsw.onrender.com/api/auth/login', { email, password });
+      
       localStorage.setItem('token', res.data.token);
       alert("Login Successful!");
       navigate('/dashboard');
