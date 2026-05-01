@@ -5,13 +5,11 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
   
-  // Get role and handle capitalization (Admin vs admin)
-  const rawRole = localStorage.getItem('role') || 'member';
-  const role = rawRole.toLowerCase(); 
+  // 1. Get role and fix capitalization
+  const role = (localStorage.getItem('role') || 'member').toLowerCase(); 
 
   const API_BASE_URL = 'https://team-task-manager-ftsw.onrender.com/api/tasks';
 
-  // 1. Load tasks from Backend
   const getTasks = async () => {
     try {
       const res = await axios.get(API_BASE_URL);
@@ -21,31 +19,38 @@ function Dashboard() {
     }
   };
 
-  useEffect(() => { 
-    getTasks(); 
-  }, []);
+  useEffect(() => { getTasks(); }, []);
 
-  // 2. Add a new task
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!title) return;
     try {
       await axios.post(API_BASE_URL, { title });
       setTitle('');
-      getTasks();
+      getTasks(); // Refresh list from server
     } catch (err) {
       console.error("Add error", err);
     }
   };
 
-  // 3. Delete a task (Admin only)
-  const deleteTask = async (id) => {
-    if (!id) return;
+  // 2. The Permanent Delete Function
+  const deleteTask = async (task) => {
+    // Check for every possible ID format MongoDB uses
+    const id = task._id || task.id || (task.data && task.data._id);
+    
+    if (!id) {
+      console.error("No ID found for task:", task);
+      return;
+    }
+
     try {
+      // This sends the request to: https://.../api/tasks/YOUR_ID
       await axios.delete(`${API_BASE_URL}/${id}`);
-      getTasks(); // Refresh list
+      
+      // Update the UI immediately so the user sees it vanish
+      setTasks(prevTasks => prevTasks.filter(t => (t._id !== id && t.id !== id)));
     } catch (err) {
-      console.error("Delete error", err);
+      console.error("Delete failed on server", err);
     }
   };
 
@@ -54,32 +59,32 @@ function Dashboard() {
       <h1>{role === 'admin' ? 'Admin Control Panel' : 'User Task Dashboard'}</h1>
       
       <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '10px', width: '200px', margin: '0 auto 30px' }}>
-        <h3>{role === 'admin' ? 'System Tasks' : 'My Tasks'}</h3>
-        <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{tasks.length}</p>
+        <h3>Total Tasks</h3>
+        <p style={{ fontSize: '32px', fontWeight: 'bold' }}>{tasks.length}</p>
       </div>
 
-      <form onSubmit={handleAddTask}>
+      <form onSubmit={handleAddTask} style={{ marginBottom: '20px' }}>
         <input 
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
-          placeholder="Enter new task..." 
-          style={{ padding: '10px', width: '300px' }}
+          placeholder="New task..." 
+          style={{ padding: '10px', width: '250px' }}
         />
         <button type="submit" style={{ padding: '10px 20px', marginLeft: '10px', background: 'green', color: 'white', border: 'none', cursor: 'pointer' }}>
           Add Task
         </button>
       </form>
 
-      <ul style={{ listStyle: 'none', padding: '20px' }}>
-        {tasks.map((task) => (
-          <li key={task._id} style={{ background: '#f4f4f4', margin: '10px auto', padding: '10px', width: '400px', borderRadius: '5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <ul style={{ listStyle: 'none', padding: '0' }}>
+        {tasks.map((task, index) => (
+          <li key={task._id || index} style={{ background: '#f9f9f9', border: '1px solid #ddd', margin: '10px auto', padding: '15px', width: '450px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>{task.title}</span>
             {role === 'admin' && (
               <button 
-                onClick={() => deleteTask(task._id)} 
-                style={{color: 'red', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 'bold'}}
+                onClick={() => deleteTask(task)} 
+                style={{color: 'white', background: '#d9534f', border: 'none', padding: '5px 15px', borderRadius: '4px', cursor: 'pointer'}}
               >
-                [Delete]
+                Delete
               </button>
             )}
           </li>
