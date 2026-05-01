@@ -5,10 +5,13 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
 
+  // UPDATED: Your live Render Backend URL
+  const API_BASE_URL = 'https://team-task-manager-ftsw.onrender.com/api/tasks';
+
   // 1. Load tasks from Backend
   const getTasks = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/tasks');
+      const res = await axios.get(API_BASE_URL); // Using Live Link
       setTasks(res.data);
     } catch (err) {
       console.error("Fetch error", err);
@@ -22,7 +25,7 @@ function Dashboard() {
     e.preventDefault();
     if (!title) return;
     try {
-      await axios.post('http://localhost:5000/api/tasks', { title });
+      await axios.post(API_BASE_URL, { title }); // Using Live Link
       setTitle('');
       getTasks(); // Refresh list
     } catch (err) {
